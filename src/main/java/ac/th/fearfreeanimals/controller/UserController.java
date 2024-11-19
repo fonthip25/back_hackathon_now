@@ -1,14 +1,19 @@
 package ac.th.fearfreeanimals.controller;
 
 import ac.th.fearfreeanimals.entity.User;
+import ac.th.fearfreeanimals.entity.GameProgress;
 import ac.th.fearfreeanimals.entity.Role;
 import ac.th.fearfreeanimals.repository.*;
+import ac.th.fearfreeanimals.service.GameProgressService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @CrossOrigin(origins ="*",allowedHeaders = "*")
@@ -17,6 +22,9 @@ public class UserController {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+
+    @Autowired
+    private GameProgressRepository gameProgressRepository;
 
     @Autowired
     public UserController(UserRepository userRepository, RoleRepository roleRepository) {
@@ -149,5 +157,37 @@ public class UserController {
 
         return ResponseEntity.ok("Fear percentage updated successfully");
     }
+// @GetMapping("/{userId}/fear-history")
+// public ResponseEntity<?> getFearHistory(@PathVariable Long id) {
+//     User user = userRepository.findById(id)
+//             .orElseThrow(() -> new RuntimeException("User not found with id " + id));
+
+//     List<GameProgress> gameProgresses = gameProgressRepository.findByUserIdOne(id); // ดึงข้อมูลด่านที่เล่น
+
+//     Map<String, Object> response = new HashMap<>();
+//     response.put("fearPercentage", user.getFearPercentage());
+//     response.put("playedAnimals", gameProgresses.stream().map(progress -> Map.of(
+//             "animalType", progress.getAnimalType(),
+//             "currentLevel", progress.getCurrentLevel()
+//     )).collect(Collectors.toList()));
+
+//     return ResponseEntity.ok(response);
+// }
+@GetMapping("/{userId}/fear-history")
+public ResponseEntity<?> getFearHistory(@PathVariable Long userId) {
+    User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
+
+    List<GameProgress> gameProgresses = gameProgressRepository.findByUser(user); // ดึงข้อมูลด่านที่เล่น
+
+    Map<String, Object> response = new HashMap<>();
+    response.put("fearPercentage", user.getFearPercentage());
+    response.put("playedAnimals", gameProgresses.stream().map(progress -> Map.of(
+            "animalType", progress.getAnimalType(),
+            "currentLevel", progress.getCurrentLevel()
+    )).collect(Collectors.toList()));
+
+    return ResponseEntity.ok(response);
+}
 
 }
